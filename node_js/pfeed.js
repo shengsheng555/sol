@@ -196,7 +196,7 @@ async function get_arbABA_result(assetA, venueA, assetB, venueB, amount){
         'assetB': assetB,
         'venueB': venueB,
         'amount': amount,
-        'middle_return': outcomeB,
+        'mid_return': outcomeB,
         'expected_return': feed2.expected_return,
         'datetime': dt
     }
@@ -210,81 +210,53 @@ async function update_arbABA_result(arb){
 
     let feed = await get_feed(arb.venueA, arb.assetA, arb.assetB, arb.amount);
     const outcomeB = feed.expected_return;
-
-    // var t1 = performance.now();
-    // console.log("Call to doSomething took " + (t1 - t0) + " milliseconds.");
-
     let feed2 = await get_feed(arb.venueB, arb.assetB, arb.assetA, outcomeB);
     const dt = new Date().toLocaleString();
-    // result = {
-    //     'assetA': assetA,
-    //     'venueA': venueA,
-    //     'assetB': assetB,
-    //     'venueB': venueB,
-    //     'amount': amount,
-    //     'middle_return': outcomeB,
-    //     'expected_return': feed2.expected_return,
-    //     'datetime': dt
-    // }
+
+    arb.mid_return = outcomeB;
     arb.expected_return = feed2.expected_return;
     arb.datetime = dt;
-    // output (venue, from_asset, to_asset, expected_return, worst_return)
-    // return arbABA_result;
 }
 
-
-var arbresult1 = {expected_return: '0'};
-var arbresult2 = {};
-
-var arb1 = {
+var arb = {
     assetA: 'USDT' ,
     venueA: 'oneinch',
-    assetB: 'USDC',
+    assetB: 'N/A',
     venueB: 'oneinch',
     amount: BigNumber(5000).shiftedBy(6),
     expected_return: 'N/A',
+    mid_return: 'N/A',
     datetime: 'N/A'
 };
 
-var arb2 = {
-    assetA: 'USDT' ,
-    venueA: 'oneinch',
-    assetB: 'DAI',
-    venueB: 'oneinch',
-    amount: BigNumber(5000).shiftedBy(6),
-    expected_return: 'N/A',
-    datetime: 'N/A'
-};
-
+function change_arb_assetB(_arb, _assetB){
+    var arb = {..._arb};
+    arb.assetB = _assetB;
+    return arb;
+}
+var arbs = [
+    change_arb_assetB(arb, 'USDC'),
+    change_arb_assetB(arb, 'DAI'),
+    change_arb_assetB(arb, 'PAX'),
+    change_arb_assetB(arb, 'WETH'),
+    change_arb_assetB(arb, 'OMG'),
+    change_arb_assetB(arb, 'ONG'),
+];
 
 var dt;
 setInterval(function(){
     var amount = BigNumber(5000).shiftedBy(6);
     // amount = '4'+zeros18;
-    // let feed = await get_feed('kyber', 'KNC', 'DAI', amount);
-    // console.log(feed);
-    // feed = await get_feed('oneinch', 'DAI', 'KNC', amount);
-    // console.log(feed);
-    // var t0 = performance.now()
+    // var t0 = performance.now();
+    for (var i = 0; i < arbs.length; i++) {
+      update_arbABA_result(arbs[i]);
+      console.log("arb", i, arbs[i].expected_return, arbs[i].mid_return, arbs[i].datetime);
+    }
+    // var t1 = performance.now();
+    // console.log("Took " + (t1 - t0) + " milliseconds.");
 
-    //for (var i = 0; i<10; i++){
-    // arbresult1 = get_arbABA_result('USDT', 'oneinch', 'USDC', 'oneinch', amount);
-    // console.log(arbresult1);
-    // arbresult2 = get_arbABA_result('USDT', 'oneinch', 'WETH', 'oneinch', amount);
-    // console.log(arbresult2);
-
-    update_arbABA_result(arb1);
-    console.log(arb1);
-    update_arbABA_result(arb2);
-    console.log(arb2);
-    // dt = new Date().toLocaleString();
-    // console.log(dt);
-
-    //}
-
-    // var t1 = performance.now()
-    // console.log("Took " + (t1 - t0) + " milliseconds.")
-
+    // update_arbABA_result(arb1);
+    // console.log("arb1", arb1.expected_return);
 }, 5000)
 
 
@@ -292,4 +264,4 @@ setInterval(function(){
 //
 //
 // var t1 = performance.now();
-// console.log("Call to doSomething took " + (t1 - t0) + " milliseconds.");
+// console.log("Took " + (t1 - t0) + " milliseconds.");
