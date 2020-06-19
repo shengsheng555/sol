@@ -205,16 +205,16 @@ async function get_arbABA_result(assetA, venueA, assetB, venueB, amount){
     return arbABA_result;
 }
 
-async function update_arbABA_result(assetA, venueA, assetB, venueB, amount, result){
+async function update_arbABA_result(arb){
     // var t0 = performance.now();
 
-    let feed = await get_feed(venueA, assetA, assetB, amount);
+    let feed = await get_feed(arb.venueA, arb.assetA, arb.assetB, arb.amount);
     const outcomeB = feed.expected_return;
 
     // var t1 = performance.now();
     // console.log("Call to doSomething took " + (t1 - t0) + " milliseconds.");
 
-    let feed2 = await get_feed(venueB, assetB, assetA, outcomeB);
+    let feed2 = await get_feed(arb.venueB, arb.assetB, arb.assetA, outcomeB);
     const dt = new Date().toLocaleString();
     // result = {
     //     'assetA': assetA,
@@ -226,18 +226,37 @@ async function update_arbABA_result(assetA, venueA, assetB, venueB, amount, resu
     //     'expected_return': feed2.expected_return,
     //     'datetime': dt
     // }
-    result.expected_return = feed2.expected_return;
-
+    arb.expected_return = feed2.expected_return;
+    arb.datetime = dt;
     // output (venue, from_asset, to_asset, expected_return, worst_return)
     // return arbABA_result;
 }
 
-function update(result) {
-    result.expected_return = '12';  // this code _does_ affect the _contents_ of the object
-}
 
 var arbresult1 = {expected_return: '0'};
 var arbresult2 = {};
+
+var arb1 = {
+    assetA: 'USDT' ,
+    venueA: 'oneinch',
+    assetB: 'USDC',
+    venueB: 'oneinch',
+    amount: BigNumber(5000).shiftedBy(6),
+    expected_return: 'N/A',
+    datetime: 'N/A'
+};
+
+var arb2 = {
+    assetA: 'USDT' ,
+    venueA: 'oneinch',
+    assetB: 'DAI',
+    venueB: 'oneinch',
+    amount: BigNumber(5000).shiftedBy(6),
+    expected_return: 'N/A',
+    datetime: 'N/A'
+};
+
+
 var dt;
 setInterval(function(){
     var amount = BigNumber(5000).shiftedBy(6);
@@ -254,10 +273,10 @@ setInterval(function(){
     // arbresult2 = get_arbABA_result('USDT', 'oneinch', 'WETH', 'oneinch', amount);
     // console.log(arbresult2);
 
-    update_arbABA_result('USDT', 'oneinch', 'USDC', 'oneinch', amount, arbresult1);
-    console.log(arbresult1);
-    update_arbABA_result('USDT', 'oneinch', 'WETH', 'oneinch', amount, arbresult2);
-    console.log(arbresult2);
+    update_arbABA_result(arb1);
+    console.log(arb1);
+    update_arbABA_result(arb2);
+    console.log(arb2);
     // dt = new Date().toLocaleString();
     // console.log(dt);
 
