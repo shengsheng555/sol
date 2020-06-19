@@ -5,11 +5,6 @@ const {PerformanceObserver, performance} = require('perf_hooks');
 const web3 = new Web3('https://mainnet.infura.io/v3/ed07e65b44354a48aa1f5547369fb513');
 // const web3 = new Web3('https://cloudflare-eth.com');
 
-const zeros5 = '00000';
-const zeros10 = '0000000000';
-const zeros18 = '000000000000000000';
-const zeros20 = '00000000000000000000';
-
 /// mainnet addresses
 const addresses = {
     // wallet address
@@ -215,6 +210,15 @@ async function update_arbABA_result(arb){
     arb.mid_return = outcomeB;
     arb.expected_return = feed2.expected_return;
     arb.datetime = dt;
+    arb.profit = arb.expected_return.minus(arb.amount)
+                    .dividedBy(assetBaseAmount[arb.assetA]);
+}
+
+const assetBaseAmount = {
+    USDT: BigNumber(1).shiftedBy(6),
+    USDC: BigNumber(1).shiftedBy(6),
+    DAI:  BigNumber(1).shiftedBy(18),
+    WETH: BigNumber(1).shiftedBy(18).times(0.0043)
 }
 
 var arb_proto = {
@@ -225,7 +229,8 @@ var arb_proto = {
     amount: 'N/A',// e.g. BigNumber(1000).shiftedBy(6)
     expected_return: 'N/A',
     mid_return: 'N/A',
-    datetime: 'N/A'
+    datetime: 'N/A',
+    profit: 'N/A' // profit in terms of USDT not considering gas
 };
 
 function change_arb_amount(_arb, _amount){
@@ -252,12 +257,7 @@ function get_arbs(){
     const assetAs = ['USDT', 'USDC', 'DAI', 'WETH'];
     const assetBs = ['USDT', 'USDC', 'DAI', 'WETH'];
     // must match assetAs
-    const assetBaseAmount = {
-        USDT: BigNumber(1).shiftedBy(6),
-        USDC: BigNumber(1).shiftedBy(6),
-        DAI:  BigNumber(1).shiftedBy(18),
-        WETH: BigNumber(1).shiftedBy(18).times(0.0043)
-    }
+
     var arbs =[];
     //generate arbs
     //loop for filling assetA
@@ -303,22 +303,22 @@ function main(){
 
     arbs = get_arbs();
     console.log(arbs.length, arbs[80]);
-    // setInterval(function(){
-    //     var amount = BigNumber(5000).shiftedBy(6);
-    //     // amount = '4'+zeros18;
-    //     // var t0 = performance.now();
-    //     for (var i = 0; i < arbs.length; i++) {
-    //       update_arbABA_result(arbs[i]);
-    //       console.log("arb", i, arbs[i].expected_return, arbs[i].mid_return, arbs[i].datetime);
-    //     }
-    //     // var t1 = performance.now();
-    //     // console.log("Took " + (t1 - t0) + " milliseconds.");
-    //
-    //     // update_arbABA_result(arb1);
-    //     // console.log("arb1", arb1.expected_return);
-    // }, 5000);
-}
+    setInterval(function(){
+        // var amount = BigNumber(5000).shiftedBy(6);
+        var t0 = performance.now();
+        for (var i = 0; i < arbs.length; i++){
+            update_arbABA_result(arbs[i]);
+            // console.log("arb", i, arbs[i].expected_return, arbs[i].mid_return, arbs[i].datetime);
+        }
+        var t1 = performance.now();
+        console.log("Took " + (t1 - t0) + " milliseconds.");
 
+        console.log(arbs[22]);
+        console.log(arbs[80]);
+        // update_arbABA_result(arb1);
+        // console.log("arb1", arb1.expected_return);
+    }, 5000);
+}
 
 main();
 // var t0 = performance.now();
