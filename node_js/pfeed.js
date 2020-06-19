@@ -157,12 +157,12 @@ async function get_oneinch_feed(feed){
 async function get_feed(venue, from_asset, to_asset, amount){
     var expected_return, worst_return;
     var feed = {
-        'venue': venue,
-        'from_asset': from_asset,
-        'from_asset_addr': addresses[from_asset],
-        'to_asset': to_asset,
-        'to_asset_addr': addresses[to_asset],
-        'amount': amount
+        venue: venue,
+        from_asset: from_asset,
+        from_asset_addr: addresses[from_asset],
+        to_asset: to_asset,
+        to_asset_addr: addresses[to_asset],
+        amount: amount
     }
 
     switch (venue){
@@ -191,14 +191,14 @@ async function get_arbABA_result(assetA, venueA, assetB, venueB, amount){
     let feed2 = await get_feed(venueB, assetB, assetA, outcomeB);
     const dt = new Date().toLocaleString();
     const arbABA_result = {
-        'assetA': assetA,
-        'venueA': venueA,
-        'assetB': assetB,
-        'venueB': venueB,
-        'amount': amount,
-        'mid_return': outcomeB,
-        'expected_return': feed2.expected_return,
-        'datetime': dt
+        assetA: assetA,
+        venueA: venueA,
+        assetB: assetB,
+        venueB: venueB,
+        amount: amount,
+        mid_return: outcomeB,
+        expected_return: feed2.expected_return,
+        datetime: dt
     }
 
     // output (venue, from_asset, to_asset, expected_return, worst_return)
@@ -206,7 +206,6 @@ async function get_arbABA_result(assetA, venueA, assetB, venueB, amount){
 }
 
 async function update_arbABA_result(arb){
-    // var t0 = performance.now();
 
     let feed = await get_feed(arb.venueA, arb.assetA, arb.assetB, arb.amount);
     const outcomeB = feed.expected_return;
@@ -218,46 +217,110 @@ async function update_arbABA_result(arb){
     arb.datetime = dt;
 }
 
-var arb = {
-    assetA: 'USDT' ,
+var arb_proto = {
+    assetA: 'N/A' ,
     venueA: 'oneinch',
     assetB: 'N/A',
     venueB: 'oneinch',
-    amount: BigNumber(5000).shiftedBy(6),
+    amount: 'N/A',// e.g. BigNumber(1000).shiftedBy(6)
     expected_return: 'N/A',
     mid_return: 'N/A',
     datetime: 'N/A'
 };
+
+function change_arb_amount(_arb, _amount){
+    var arb = {..._arb};
+    arb.amount = _amount;
+    return arb;
+}
+
+function change_arb_assetA(_arb, _assetA){
+    var arb = {..._arb};
+    arb.assetA = _assetA;
+    return arb;
+}
 
 function change_arb_assetB(_arb, _assetB){
     var arb = {..._arb};
     arb.assetB = _assetB;
     return arb;
 }
-var arbs = [
-    change_arb_assetB(arb, 'USDC'),
-    change_arb_assetB(arb, 'DAI'),
-    change_arb_assetB(arb, 'PAX'),
-    change_arb_assetB(arb, 'WETH'),
-    change_arb_assetB(arb, 'OMG'),
-    change_arb_assetB(arb, 'ONG'),
-];
 
-var dt;
-setInterval(function(){
-    var amount = BigNumber(5000).shiftedBy(6);
-    // amount = '4'+zeros18;
-    // var t0 = performance.now();
-    for (var i = 0; i < arbs.length; i++) {
-      update_arbABA_result(arbs[i]);
-      console.log("arb", i, arbs[i].expected_return, arbs[i].mid_return, arbs[i].datetime);
+
+function get_arbs(){
+
+    const amount_factors = [300, 1000, 3000, 10000, 30000, 100000, 300000];
+    const assetAs = ['USDT', 'USDC', 'DAI', 'WETH'];
+    const assetBs = ['USDT', 'USDC', 'DAI', 'WETH'];
+    // must match assetAs
+    const assetBaseAmount = {
+        USDT: BigNumber(1).shiftedBy(6),
+        USDC: BigNumber(1).shiftedBy(6),
+        DAI:  BigNumber(1).shiftedBy(18),
+        WETH: BigNumber(1).shiftedBy(18)
     }
-    // var t1 = performance.now();
-    // console.log("Took " + (t1 - t0) + " milliseconds.");
+    var arbs =[];
+    //generate arbs
+    //loop for filling assetA
+    for (var i = 0; i < assetAs.length; i++) {
+        var arb = arb_proto;
+        arb = change_arb_assetA(arb, assetAs[i]);
+        //loop for filling amount
+        for (var j = 0; j < amount_factors.length; j++) {
+            // get start amount based on USDT value for assetA
+            var amount = assetBaseAmount[assetAs[i]].times(amount_factors[j]);
+            // if (assetAs[i] == 'USDT') {
+            //     amount = BigNumber(1).shiftedBy(6).times(amount_factors[j]);
+            // } else {
+            //     // assume no impact for starting amount
+            //     const in_amount = BigNumber(1).shiftedBy(6);
+            //     const feed = await get_feed('oneinch', 'USDT', assetAs[i], in_amount);
+            //     amount = feed.expected_return.times(amount_factors[j]);
+            // }
+            arb = change_arb_amount(arb, amount);
+            //loop for filling assetB
+            for (var k = 0; k < assetBs.length; k++) {
+                if (assetAs[i] != assetBs[k]){
+                    arb = change_arb_assetB(arb, assetBs[k]);
+                    arbs.push(arb);
+                }
+            }
+        }
+    }
 
-    // update_arbABA_result(arb1);
-    // console.log("arb1", arb1.expected_return);
-}, 5000)
+    return arbs;
+}
+
+
+arbs = get_arbs();
+console.log(arbs.length, arbs[60]);
+
+// var arbs = [
+//     change_arb_assetB(arb, 'USDC'),
+//     change_arb_assetB(arb, 'DAI'),
+//     change_arb_assetB(arb, 'PAX'),
+//     change_arb_assetB(arb, 'WETH'),
+//     change_arb_assetB(arb, 'OMG'),
+//     change_arb_assetB(arb, 'ONG'),
+// ];
+
+
+
+
+// setInterval(function(){
+//     var amount = BigNumber(5000).shiftedBy(6);
+//     // amount = '4'+zeros18;
+//     // var t0 = performance.now();
+//     for (var i = 0; i < arbs.length; i++) {
+//       update_arbABA_result(arbs[i]);
+//       console.log("arb", i, arbs[i].expected_return, arbs[i].mid_return, arbs[i].datetime);
+//     }
+//     // var t1 = performance.now();
+//     // console.log("Took " + (t1 - t0) + " milliseconds.");
+//
+//     // update_arbABA_result(arb1);
+//     // console.log("arb1", arb1.expected_return);
+// }, 5000)
 
 
 // var t0 = performance.now();
