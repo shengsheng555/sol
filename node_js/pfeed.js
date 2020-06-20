@@ -12,8 +12,8 @@ console.log = function(d) { //
   log_stdout.write(util.format(d) + '\n');
 };
 
-const web3 = new Web3('https://mainnet.infura.io/v3/ed07e65b44354a48aa1f5547369fb513'); //default
-// const web3 = new Web3('https://mainnet.infura.io/v3/df317d14e45f4726877e0bc3f2dfa167');//fl
+// const web3 = new Web3('https://mainnet.infura.io/v3/ed07e65b44354a48aa1f5547369fb513'); //default
+const web3 = new Web3('https://mainnet.infura.io/v3/df317d14e45f4726877e0bc3f2dfa167');//fl
 
 // const web3 = new Web3('https://cloudflare-eth.com');
 
@@ -322,12 +322,12 @@ function main(){
         best_arb.profit = BigNumber(0);
         for (var i = 0; i < arbs.length; i++){
             // get current second
-            var sec = new Date().getSeconds();
+            // var sec = new Date().getSeconds();
             // send updating request seperately
-            const period = 5;
-            if (i % period == sec % period){
-                update_arbABA_result(arbs[i]);
-            }
+            // const period = 5;
+            // if (i % period == sec % period){
+            update_arbABA_result(arbs[i]);
+            // }
             // check is current arb is better than the best
             if (BigNumber.isBigNumber(arbs[i].profit)
                   && arbs[i].profit.gt(best_arb.profit)){
@@ -338,25 +338,27 @@ function main(){
         // var t1 = performance.now();
         // console.log("Took " + (t1 - t0) + " milliseconds.");
 
-        var sec = new Date().getSeconds();
-        const period = 5;
-        if (sec % period == 0){
-            console.log('best_arb: ');
+        // update his_best_arb
+        if (BigNumber.isBigNumber(best_arb.profit)
+              && best_arb.profit.gt(his_best_arb.profit)){
+            his_best_arb = best_arb;
+            console.log('his_best_arb:');
+            console.log(his_best_arb);
+        }
+
+
+        // var sec = new Date().getSeconds();
+        // const period = 5;
+        // if (sec % period == 0){
+            console.log('best_arb:');
             console.log(best_arb);
-            // update his_best_arb
-            if (BigNumber.isBigNumber(best_arb.profit)
-                  && best_arb.profit.gt(his_best_arb.profit)){
-                his_best_arb = best_arb;
-                console.log('his_best_arb: ');
-                console.log(his_best_arb);
-            }
             // console.log(best_arb);
             // Save log to custom log file "my-log.log".
-        }
+        // }
         // console.log(arbs[80]);
         // update_arbABA_result(arb1);
         // console.log("arb1", arb1.expected_return);
-    }, 1000);
+    }, 5000);
 }
 
 main();
