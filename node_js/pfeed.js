@@ -212,6 +212,7 @@ async function update_arbABA_result(arb){
     arb.datetime = dt;
     arb.profit = arb.expected_return.minus(arb.amount)
                     .dividedBy(assetBaseAmount[arb.assetA]);
+
 }
 
 const assetBaseAmount = {
@@ -251,11 +252,14 @@ function change_arb_assetB(_arb, _assetB){
     return arb;
 }
 
-function get_arbs(){
+function get_arbs_cand(){
 
     const amount_factors = [300, 1000, 3000, 10000, 30000, 100000, 300000];
     const assetAs = ['USDT', 'USDC', 'DAI', 'WETH'];
-    const assetBs = ['USDT', 'USDC', 'DAI', 'WETH'];
+    const assetBs = [
+              'WETH', 'DAI', 'USDT', 'LINK', 'USDC', 'PAX', 'ZB', 'VEN', 'BNB', 'STROJ',
+              'OKB', 'TUSD', 'HT', 'ZIL', 'OMG', 'ONG', 'BUSD', 'IOST', 'KNC', 'LAMB', 'ZRX'
+          ];
     // must match assetAs
 
     var arbs =[];
@@ -290,37 +294,35 @@ function get_arbs(){
 }
 
 
-// var arbs = [
-//     change_arb_assetB(arb, 'USDC'),
-//     change_arb_assetB(arb, 'DAI'),
-//     change_arb_assetB(arb, 'PAX'),
-//     change_arb_assetB(arb, 'WETH'),
-//     change_arb_assetB(arb, 'OMG'),
-//     change_arb_assetB(arb, 'ONG'),
-// ];
-
 function main(){
 
-    arbs = get_arbs();
+    var arbs = get_arbs_cand();
     console.log(arbs.length, arbs[80]);
     setInterval(function(){
         // var amount = BigNumber(5000).shiftedBy(6);
         var t0 = performance.now();
+
+        var best_arb = arb_proto;
+        best_arb.profit = BigNumber(0);
         for (var i = 0; i < arbs.length; i++){
             update_arbABA_result(arbs[i]);
+            if (BigNumber.isBigNumber(arbs[i].profit)
+                  && arbs[i].profit.gt(best_arb.profit)){
+                best_arb = arbs[i];
+            }
             // console.log("arb", i, arbs[i].expected_return, arbs[i].mid_return, arbs[i].datetime);
         }
         var t1 = performance.now();
         console.log("Took " + (t1 - t0) + " milliseconds.");
-
-        console.log(arbs[22]);
-        console.log(arbs[80]);
+        console.log(best_arb);
+        // console.log(arbs[80]);
         // update_arbABA_result(arb1);
         // console.log("arb1", arb1.expected_return);
     }, 5000);
 }
 
 main();
+
 // var t0 = performance.now();
 //
 //
