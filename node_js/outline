@@ -1,0 +1,15 @@
+price feed structure:
+(str venue, str from_asset, str to_asset, uint amount, uint expected_price, uint slippage_price)
+
+e.g.
+venue:  "kyber", "uniswapv2"
+from_asset: "DAI", "WETH"
+to_asset: "DAI", "WETH"
+expected_price: 64760000000000 (18 decimals)
+slippage_price: 62817200000000 (18 decimals)
+
+1inch is not always optimal
+
+To-do:
+1. sol: understand/use dydx flashloan and test it forked mainnet
+2. read more about general arb theory to discover arb chances
