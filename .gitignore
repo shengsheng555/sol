@@ -1,4 +1,8 @@
-node_js/node_modules/
-node_js/*.log
-node_js/test.js
-node_js/package-lock.json
+build/
+migrations/
+node_modules/
+test/
+*.log
+test.js
+package-lock.json
+outline
